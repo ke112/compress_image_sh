@@ -1,14 +1,13 @@
 #!/bin/bash
 
 # 定义要处理的图片文件夹路径
-# image_dir=$1
 image_dir=$1
 
 # 定义目标图片大小
 target_size="1024" #单位为像素
 
 # 定义压缩后的质量 (针对webp)
-quality="75"
+quality="100"
 
 # 图片总个数
 imageNum=0
@@ -17,7 +16,7 @@ imageNum=0
 compressNum=0
 
 function handle_file() {
-  # echo "$file"
+  file=$1
   if [[ "$file" == *.png || "$file" == *.jpg || "$file" == *.jpeg ]]; then
     imageNum=$(($imageNum + 1))
     # 获取原始图片宽度
