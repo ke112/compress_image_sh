@@ -4,7 +4,8 @@
 image_dir=$1
 quality="80"       # 建议 75-85 之间，100 往往无法减小体积
 min_size_kb=100    # 调整阈值为 100KB，500KB 可能跳过太多图片
-white_list=("new_version_5_icon_default.png")
+# 白名单，不会被压缩
+white_list=("new_version_5_icon_d.png")
 
 # --- 统计变量 ---
 imageNum=0
