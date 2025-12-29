@@ -12,6 +12,7 @@ jpgNum=0
 jpegNum=0
 webpNum=0
 heicNum=0
+svgNum=0          # 新增 svg 统计
 compressNum=0
 skipNum=0
 
@@ -56,7 +57,7 @@ function handle_file() {
   # 统一转为小写匹配
   local ext_lower=$(echo "$extension" | tr '[:upper:]' '[:lower:]')
   
-  if [[ "$ext_lower" =~ ^(png|jpg|jpeg|webp|heic)$ ]]; then
+  if [[ "$ext_lower" =~ ^(png|jpg|jpeg|webp|heic|svg)$ ]]; then
     imageNum=$((imageNum + 1))
     
     # 统计各格式数量
@@ -66,6 +67,7 @@ function handle_file() {
       jpeg) jpegNum=$((jpegNum + 1)) ;;
       webp) webpNum=$((webpNum + 1)) ;;
       heic) heicNum=$((heicNum + 1)) ;;
+      svg) svgNum=$((svgNum + 1)) ;;
     esac
 
     local size_kb=$(get_file_size_kb "$file")
@@ -74,7 +76,22 @@ function handle_file() {
       local temp_output="${file}.tmp.webp"
       
       # 执行转换
-      cwebp -quiet -q "$quality" -mt "$file" -o "$temp_output"
+      if [[ "$ext_lower" == "svg" ]]; then
+        # SVG 转换逻辑
+        if command -v rsvg-convert &> /dev/null; then
+          rsvg-convert --format=webp "$file" -o "$temp_output"
+        elif command -v magick &> /dev/null; then
+          magick "$file" "$temp_output"
+        elif command -v convert &> /dev/null; then
+          convert "$file" "$temp_output"
+        else
+          warn "跳过 SVG: 未找到 rsvg-convert 或 ImageMagick。请安装 librsvg 或 imagemagick"
+          return
+        fi
+      else
+        # 其他格式继续使用 cwebp
+        cwebp -quiet -q "$quality" -mt "$file" -o "$temp_output"
+      fi
 
       # 检查转换是否成功且文件大小是否有效
       if [ $? -eq 0 ] && [ -f "$temp_output" ] && [ $(get_file_size_kb "$temp_output") -gt 0 ]; then
@@ -150,7 +167,7 @@ fi
 # --- 统计报告 ---
 echo -e "\n"
 log "==== 本次共检索到 ${imageNum} 张图片, 处理了 ${compressNum} 张, 跳过了 ${skipNum} 张"
-log "==== 详情: PNG:${pngNum} | JPG:${jpgNum} | JPEG:${jpegNum} | WEBP:${webpNum} | HEIC:${heicNum}"
+log "==== 详情: PNG:${pngNum} | JPG:${jpgNum} | JPEG:${jpegNum} | WEBP:${webpNum} | HEIC:${heicNum} | SVG:${svgNum}"
 log "==== 压缩前总大小: $start_size"
 log "==== 压缩后总大小: $end_size"
 showTime
