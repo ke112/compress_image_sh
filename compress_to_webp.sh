@@ -18,11 +18,17 @@ skipNum=0
 
 # --- 颜色定义 ---
 function log() {
-  echo -e "\033[42;97m $* \033[0m"
+  # 统一使用 printf 避免部分 shell 下 echo -e 的兼容性问题
+  printf "\033[42;97m %s \033[0m\n" "$*"
+}
+
+function success_log() {
+  # 绿色背景，黑色文字，用于醒目显示处理成功的文件
+  printf "\033[42;30m %s \033[0m\n" "$*"
 }
 
 function warn() {
-  echo -e "\033[41;97m [错误] $* \033[0m"
+  printf "\033[41;97m [错误] %s \033[0m\n" "$*"
 }
 
 # --- 环境检查 ---
@@ -97,12 +103,12 @@ function handle_file() {
       if [ $? -eq 0 ] && [ -f "$temp_output" ] && [ $(get_file_size_kb "$temp_output") -gt 0 ]; then
         if [[ "$ext_lower" == "webp" ]]; then
           mv "$temp_output" "$file"
-          echo "Re-encoded $file"
+          success_log "Re-encoded $file (WebP 重新压缩完成)"
         else
           mv "$temp_output" "$newfile"
           # 只有新文件生成成功才删除旧文件
           rm -f "$file"
-          echo "Converted $file to $newfile"
+          success_log "Converted $file to $newfile (转换完成)"
         fi
         compressNum=$((compressNum + 1))
       else
@@ -165,10 +171,10 @@ else
 fi
 
 # --- 统计报告 ---
-echo -e "\n"
+printf "\n\n"
 log "==== 本次共检索到 ${imageNum} 张图片, 处理了 ${compressNum} 张, 跳过了 ${skipNum} 张"
 log "==== 详情: PNG:${pngNum} | JPG:${jpgNum} | JPEG:${jpegNum} | WEBP:${webpNum} | HEIC:${heicNum} | SVG:${svgNum}"
 log "==== 压缩前总大小: $start_size"
 log "==== 压缩后总大小: $end_size"
 showTime
-echo -e "\n"
+printf "\n\n"
