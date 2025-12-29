@@ -4,6 +4,7 @@
 image_dir=$1
 quality="80"       # 建议 75-85 之间，100 往往无法减小体积
 min_size_kb=100    # 调整阈值为 100KB，500KB 可能跳过太多图片
+white_list=("new_version_5_icon_default.png")
 
 # --- 统计变量 ---
 imageNum=0
@@ -43,6 +44,16 @@ if [ -z "$image_dir" ]; then
 fi
 
 # --- 工具函数 ---
+function is_in_whitelist() {
+  local target="$1"
+  for item in "${white_list[@]}"; do
+    if [[ "$target" == "$item" ]]; then
+      return 0 # 在白名单中
+    fi
+  done
+  return 1 # 不在白名单中
+}
+
 function get_file_size_kb() {
   local file="$1"
   local size_bytes=0
@@ -57,6 +68,14 @@ function get_file_size_kb() {
 function handle_file() {
   local file="$1"
   local filename=$(basename "$file")
+
+  # 检查白名单
+  if is_in_whitelist "$filename"; then
+    echo "Skipped $file (Whitelist)"
+    skipNum=$((skipNum + 1))
+    return
+  fi
+
   local extension="${filename##*.}"
   local base_name="${file%.*}"
   
